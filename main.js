@@ -186,6 +186,7 @@ function build() {
             formulaWithValues = formulaWithValues.replace(rgx, valueSets[valueSetNumber][atomIndex]);
         }
         console.log(formulaWithValues);
+        calculateFunctionResult(formulaWithValues);
     }
 }
 
@@ -229,8 +230,6 @@ function equivalence(x, y) {
 }
 
 function getValueSets(atoms) {
-    console.log(atoms);
-
     let sets = [];
     for (let row = 0; row < Math.pow(2, atoms.length); row++) {
         sets.push([]);
@@ -250,7 +249,24 @@ function getValueSets(atoms) {
 }
 
 function calculateFunctionResult(formulaWithValues) {
+    formulaWithValues = formulaWithValues.replace(/\(!0\)/g, '1');
+    formulaWithValues = formulaWithValues.replace(/\(!1\)/g, '0');
 
+    while (formulaWithValues.match(/[|&~]|->/)) {
+        formulaWithValues = formulaWithValues.replace(/(\([10]\|1\))|(\(1\|[10]\))/g, '1');
+        formulaWithValues = formulaWithValues.replace(/(\(0\|0\))/g, '0');
+        
+        formulaWithValues = formulaWithValues.replace(/(\([10]\&0\))|(\(0\&[10]\))/g, '0');
+        formulaWithValues = formulaWithValues.replace(/(\(1\&1\))/g, '1');
+
+        formulaWithValues = formulaWithValues.replace(/\([10]->1\)/g, '1');
+        formulaWithValues = formulaWithValues.replace(/\(1->0\)/g, '0');
+        
+        formulaWithValues = formulaWithValues.replace(/\(([10])~\1\)/g, '1');
+        formulaWithValues = formulaWithValues.replace(/\(([10])~(?!\1)\)/g, '1');
+    }
+
+    console.log(formulaWithValues);
 }
 
 class TruthTable {
