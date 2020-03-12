@@ -1,0 +1,130 @@
+* {
+    font-family: 'Courier New', Courier, monospace;
+}
+
+.button {
+    margin: 5px auto;
+  
+    display: block;
+    overflow: hidden;
+    outline: none;
+    
+    border: 3px solid #977bad;
+    border-radius: 2px;   
+}
+
+#pageTitle {
+    text-align: center;
+}
+
+span {
+    font-size: 24px;
+}
+
+#formulaInput {
+    margin: 5px auto;
+
+    display: block;
+    overflow: hidden;
+    outline: none;
+
+    border: 3px solid #000000;
+    border-radius: 2px;
+
+    font-size: 24px;
+    width: 580px;
+}
+
+#messageText {
+    text-align: center;
+    font-weight: bold;
+    font-size: 22pt;
+    width: 1000px;
+}
+
+a {
+    text-decoration: none;
+    color: #977bad;
+    outline: none;
+}
+
+#questLink {
+    text-align: center;
+}
+
+body {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+#checking {
+    height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+#questLink, #pageTitle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+
+
+
+#answer {
+    text-align: center;
+}
+
+#question {
+    height: 200px;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+}
+
+#formula {
+    margin: 5px auto;
+
+    display: block;
+    overflow: hidden;
+    outline: none;
+
+    color: #977bad;
+    border-radius: 2px;
+
+    font-size: 24px;
+    width: 580px;
+}
+
+#answer {
+    height: 100px;
+}
+
+#trueLabel, #falseLabel {
+    font-size: 24px;
+}
+
+.radio {
+	width: 24px;
+    height: 24px;
+}
+
+#score {
+    font-size: 150px;
+    color: #977bad;
+}
+
+#resultSection {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}

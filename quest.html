@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <link rel="stylesheet" href="styles.css">
+        <title>quest</title>
+    </head>
+
+    <body>
+        <div id="questSection">
+            <div id="question">
+                <span>is formula in principal conjuctive normal form?</span>
+                <span id="formula"></span>
+            </div>
+    
+            <form id="answer">
+                <input type="radio" id="true" name="radio" class="radio" checked="true">
+                <label for="true" id="trueLabel">yes</label>
+                <input type="radio" id="false" name="radio" class="radio">
+                <label for="false" id="falseLabel">no</label>
+            </form>
+    
+            <button class="button" id="confirmButton" onclick="confirm()"><span>confirm</span></button>
+            <button class="button" id="nextButton" onclick="next()"><span>next</span></button>
+        </div>
+        
+        <div id="resultSection">
+            <span>Your score</span>
+            <span id="score"></span>
+            <button class="button"><a href="index.html">go back</a></button>
+        </div>
+        
+        <script src="main.js"></script>
+    </body>
+</html>
