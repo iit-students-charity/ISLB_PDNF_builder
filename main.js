@@ -174,8 +174,19 @@ function checkFormula(formula) {
     return 0;
 }
 
-function check() {
-    getValuesSets(getUniqueAtoms(document.getElementById('formulaInput').value));
+function build() {
+    let formula = document.getElementById('formulaInput').value;
+    let atoms = getUniqueAtoms(formula);
+    let valueSets = getValueSets(atoms);
+
+    for (valueSetNumber = 0; valueSetNumber < valueSets.length; valueSetNumber++) {
+        let formulaWithValues = formula;
+        for (atomIndex = 0; atomIndex < atoms.length; atomIndex++) {
+            var rgx = new RegExp(atoms[atomIndex], "g");
+            formulaWithValues = formulaWithValues.replace(rgx, valueSets[valueSetNumber][atomIndex]);
+        }
+        console.log(formulaWithValues);
+    }
 }
 
 function compareArrays(array1, array2) {
@@ -188,146 +199,6 @@ function compareArrays(array1, array2) {
     }
 
     return true;
-}
-
-///////////// quest.js
-
-class Question {
-    constructor(formula, answer) {
-        this.formula = formula;
-        this.answer = answer;
-    }
-}
-
-var variablesCodes = [ 'A', 'B', 'C', 'D' ];
-
-var currentQuestion = generateQuestion();
-var countOfQuestions = 10;
-var currentQuestionIndex = 1;
-var correctAnswers = 0;
-
-renderQuestion();
-refreshAnswers();
-
-var confirmButton = document.getElementById('confirmButton');
-var nextButton = document.getElementById('nextButton');
-var questSection = document.getElementById('questSection');
-var resultSection = document.getElementById('resultSection');
-
-nextButton.style.display = 'none';
-resultSection.style.display = 'none';
-
-function confirm() {
-    let currentAnswerElement = document.getElementById(currentQuestion.answer.toString());
-    let isCorrectAnswered = currentAnswerElement.checked;
-    highlight(
-        isCorrectAnswered ? currentQuestion.answer.toString() : (!currentQuestion.answer).toString(),
-        isCorrectAnswered ? 'greenyellow' : 'red'
-        );
-
-    if (isCorrectAnswered) {
-        correctAnswers++;
-    }
-
-    confirmButton.style.display = 'none'; 
-    nextButton.style.display = 'flex';
-}
-
-function next() {
-    ++currentQuestionIndex;
-    if (currentQuestionIndex === countOfQuestions) {
-        document.getElementById('score').innerHTML = 10 * correctAnswers / countOfQuestions;
-
-        questSection.style.display = 'none';
-        resultSection.style.display = 'flex';
-        document.
-        return;
-    }
-
-    currentQuestion = generateQuestion();
-
-    renderQuestion();
-    refreshAnswers();
-
-    confirmButton.style.display = 'flex';
-    nextButton.style.display = 'none';
-}
-
-function generateQuestion() {
-    let countOfArgs = getRandomInt(3);
-    let countOfGroups = getRandomInt(Math.pow(2, countOfArgs));
-
-    let formula = generateFormula(countOfGroups, countOfArgs);
-    let answer = checkFormula(formula) === 0 ? true : false;
-
-    return new Question(formula, answer);
-}
-
-function getRandomInt(max) {
-    return Math.floor(Math.random() * Math.floor(max)) + 1;
-}
-
-function generateFormula(countOfGroups, countOfArgs) {
-    let formula = '';
-
-    for (i = 0; i < countOfGroups; i++) {
-        let countOfArgsInParticualarGroup = countOfArgs - getRandomInt(countOfArgs) + 2;
-        let group = '';
-
-        if (countOfGroups !== 1 && i < countOfGroups - 1) {
-            formula += '(';
-        }
-
-        for (j = 0; j < countOfArgsInParticualarGroup; j++) {
-            if (countOfArgsInParticualarGroup !== 1 && j < countOfArgsInParticualarGroup - 1) {
-                group += '(';
-            }
-
-            let isNegative = (Math.random() >= 0.5);
-            group += (isNegative ? '(!' : '') + variablesCodes[j] + (isNegative ? ')' : '');
-            if (j < countOfArgsInParticualarGroup - 1) {
-                let random  = Math.random();
-                group += ((random >= 0.2) ? '|' : (random >= 0.1 ? '&' : (random >= 0.05 ? '~' : '->')));
-            }
-        }
-
-        for (j = 0; j < countOfArgsInParticualarGroup - 1; j++) {
-            if (countOfArgsInParticualarGroup !== 1) {
-                group += ')';
-            }
-        }
-
-        formula += group;
-
-        if (i < countOfGroups - 1) {
-            let random  = Math.random();
-            formula += ((random >= 0.3) ? '|' : (random >= 0.2 ? '&' : (random >= 0.1 ? '~' : '->')));
-        }
-    }
-
-    for (j = 0; j < countOfGroups - 1; j++) {
-        if (countOfGroups !== 1) {
-            formula += ')';
-        }
-    }
-
-    return formula;
-}
-
-function renderQuestion() {
-    document.getElementById('formula').innerHTML = currentQuestion.formula;
-}
-
-function refreshAnswers() {
-    document.getElementById(currentQuestion.answer.toString() + 'Label').style.color = 'black';
-    document.getElementById((!currentQuestion.answer).toString() + 'Label').style.color = 'black';
-    document.getElementById(currentQuestion.answer.toString()).checked = false;
-    document.getElementById((!currentQuestion.answer).toString()).checked = false;
-}
-
-function highlight(answerId, color) {
-    let answerElement = document.getElementById(answerId + 'Label');
-    answerElement.style.color = color;
 }
 
 //////////
@@ -357,7 +228,7 @@ function equivalence(x, y) {
     return x === y;
 }
 
-function getValuesSets(atoms) {
+function getValueSets(atoms) {
     console.log(atoms);
 
     let sets = [];
@@ -367,7 +238,6 @@ function getValuesSets(atoms) {
 
         if (binaryNumber.length < atoms.length) {
             sets[row] = Array.from('0'.repeat(atoms.length - binaryNumber.length));
-            console.log(binaryNumber);
             binaryNumber.forEach(digit => {
                 sets[row].push(digit);                
             });
@@ -375,8 +245,8 @@ function getValuesSets(atoms) {
             sets[row] = binaryNumber;
         }
     }
-
-    console.log(sets);
+    
+    return sets;
 }
 
 function calculateFunctionResult(formulaWithValues) {
