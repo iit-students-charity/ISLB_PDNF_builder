@@ -175,7 +175,7 @@ function checkFormula(formula) {
 }
 
 function check() {
-    getUniqueAtoms(document.getElementById('formulaInput').value);
+    getValuesSets(getUniqueAtoms(document.getElementById('formulaInput').value));
 }
 
 function compareArrays(array1, array2) {
@@ -330,14 +330,10 @@ function highlight(answerId, color) {
     answerElement.style.color = color;
 }
 
-
-
-
 //////////
 
 function getUniqueAtoms(formula) {
-    let atoms = formula.split(/[^A-Z]/).filter(value => value !== '');
-    console.log(atoms);
+    let atoms = [...new Set(formula.split(/[^A-Z]/).filter(value => value !== ''))];
     return atoms;
 }
 
@@ -361,3 +357,36 @@ function equivalence(x, y) {
     return x === y;
 }
 
+function getValuesSets(atoms) {
+    console.log(atoms);
+
+    let sets = [];
+    for (let row = 0; row < Math.pow(2, atoms.length); row++) {
+        sets.push([]);
+        let binaryNumber = Array.from(row.toString(2));
+
+        if (binaryNumber.length < atoms.length) {
+            sets[row] = Array.from('0'.repeat(atoms.length - binaryNumber.length));
+            console.log(binaryNumber);
+            binaryNumber.forEach(digit => {
+                sets[row].push(digit);                
+            });
+        } else {
+            sets[row] = binaryNumber;
+        }
+    }
+
+    console.log(sets);
+}
+
+function calculateFunctionResult(formulaWithValues) {
+
+}
+
+class TruthTable {
+    constructor(atoms, values, functionResults) {
+        this.atoms = atoms;
+        this.values = values;
+        this.functionResults = functionResults;
+    }
+}
