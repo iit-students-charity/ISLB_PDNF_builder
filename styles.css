@@ -3,7 +3,7 @@
 }
 
 .button {
-    margin: 5px auto;
+    margin: 5px 10px;
   
     display: block;
     overflow: hidden;
@@ -22,7 +22,7 @@ span {
 }
 
 #formulaInput {
-    margin: 5px auto;
+    margin: 5px 10px;
 
     display: block;
     overflow: hidden;
@@ -52,6 +52,17 @@ a {
     text-align: center;
 }
 
+#result {
+    text-align: center;
+    font-size: 28px;
+}
+
+#table {
+    text-align: center;
+    font-size: 28px;
+    color: grey;
+} 
+
 body {
     height: 100vh;
     display: flex;
@@ -61,12 +72,12 @@ body {
     overflow: hidden;
 }
 
-#checking {
-    height: 400px;
+#building {
+    height: 100px;
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-direction: column;
+    flex-direction: row;
 }
 
 #questLink, #pageTitle {

@@ -1,31 +1,21 @@
 /////////////////////////////////////////////////////////////////////////////////////
-// Лабораторная работа 1 по дисциплине ЛОИС
+// Лабораторная работа 2 по дисциплине ЛОИС
 // Выполнена студенткой группы 721702 БГУИР Стрижич Анжелика Олеговна
-// Файл содержит функции парсинга строки для проверки формулы СКНФ и функции обработки тестовых заданий
-// 25.02.2020
+// Файл содержит функции парсинга строки для проверки синтаксиса и подсчета значений подформул
+// 12.03.2020
 
-var checkingMessages = [ 
-    "this function is in principal conjuctive normal form", // 0
+var checkingMessages = [
+    "", // 0
     "invalid symbols", // 1
-    "formula has groups divided by '|', '->' or '~'", // 2
-    "not all of subgroups have equal count of variables", // 3
-    "formula contains equal elementary disjunctions", // 4
-    "invalid syntax: formula must end with ')' followed by variables", // 5
-    "invalid syntax: all symbols must be divided by '&', '|', '~' or '->'", // 6
-    "invalid syntax: formula must start with '(' and variables for next", // 7
-    "some groups have extra (different from other groups sets) variables", // 8
-    "invalid syntax: braces missing", // 9
-    "invalid syntax: all negations have to be braced", // 10
-    "enter formula", // 11
-    "invalid syntax: formula contains complex negations", // 12
-    "formula has unmatched operators", // 13
-    "invalid syntax: all groups have to be divided by '&', '|', '~' or '->'", // 14
-    "expected disjunctions contain '&', '~' or '->'", // 15
-    "formula consists of single braced symbol (tip: debrace it) or single non-disjunction expression", // 16
-    "invalid syntax: extra braces", // 17
-    "invalid syntax: all binary operations have to be braced", // 18
-    "this function is not in principal conjuctive normal form", // 19
-    "invalid syntax: double negation found", // 20
+    "formula must start with '(' and variables for next", // 2
+    "formula must end with ')' followed by variables", // 3
+    "all groups have to be divided by '&', '|', '~' or '->'", // 4
+    "all symbols must be divided by '&', '|', '~' or '->'", // 5
+    "all negations have to be braced", // 6
+    "all binary operations have to be braced", // 7
+    "one braced symbol", // 8
+    "extra braces", // 9
+    "braces lack", // 10
 ];
 
 function checkSyntax(formula) {
@@ -34,39 +24,31 @@ function checkSyntax(formula) {
     }
 
     if (!formula.match(/^\((\(*|[01A-Z]|\(!?[01A-Z]\))/) && !formula.match(/[A-Z01]/g)) {
-        return 7;
+        return 2;
     }
 
     if (!formula.match(/[A-Z)01]\)$/) && !formula.match(/[A-Z01]/g)) {
-        return 5;
-    }
-
-    if (formula.match(/[01]/g)) {
-        return 19;
-    }
-    
-    if (formula.match(/!\(/)) {
-        return 12;
+        return 3;
     }
 
     if (formula.match(/\)\(/)) {
-        return 14;
+        return 4;
     }
 
     if (formula.match(/[A-Z]([^|&~]|(?!->))[A-Z]/)) {
-        return 6;
+        return 5;
     }
 
     if (formula.match(/[^(]![A-B]/) || formula.match(/![A-B][^)]/)) {
-        return 10;
-    }
-
-    if (formula.match(/^\(([A-Z])(([&~]|->)(?!!\1)!?[A-Z])?\)$/)) {
-        return 16;
+        return 6;
     }
     
     if (formula.match(/([|&~]|->)[A-Z]([|&~]|->)/g) || formula.match(/^[A-Z]([|&~]|->)[A-Z]$/g)) {
-        return 18;
+        return 7;
+    }
+
+    if (formula.match(/\([A-Z]\)/)) {
+        return 8;
     }
 
     return 0;
@@ -81,53 +63,7 @@ function checkPairingBraces(formula) {
     }
 
     if (countOfOpenBraces < countOfCloseBraces) {
-        return 17;
-    }
-
-    return 0;
-}
-
-function debrace(formula) {
-    // ((x|y) | z) = (x|y) | z
-    formula = formula.replace(/\((.*)\)/, '\$1');
-    // (!x) = !x
-    formula = formula.replace(/\((![A-Z])\)/g, '\$1');
-
-    return formula;
-}
-
-function checkLiteralSets(groups) {
-    let literalGroups = [];
-
-    groups.forEach(value => {
-        let literals = value.split('|').filter(value => value && value !== "|");
-        literalGroups.push(literals);
-    });
-
-    for (i = 0; i < literalGroups.length - 1; i++) {
-        if (literalGroups[i][0].match(/[&~]|->/)) {
-            return 15;
-        }
-
-        for (j = i + 1; j < literalGroups.length; j++) {
-            if (literalGroups[i].length !== literalGroups[j].length) {
-                return 3;
-            }
-            
-            if (compareArrays(literalGroups[i], literalGroups[j])) {
-                return 4;
-            }
-
-            let iLiteralsCopy = [];
-            let jLiteralsCopy = [];
-
-            literalGroups[i].forEach(value => iLiteralsCopy.push(value.replace('!', '')));
-            literalGroups[j].forEach(value => jLiteralsCopy.push(value.replace('!', '')));
-
-            if (!compareArrays(iLiteralsCopy, jLiteralsCopy)) {
-                return 8;
-            }
-        }
+        return 10;
     }
 
     return 0;
@@ -135,40 +71,17 @@ function checkLiteralSets(groups) {
 
 function checkFormula(formula) {
     if (!formula) {
-        return 11;
+        return 1;
     }
 
-    // starting syntax check
     let isSyntaxValid = checkSyntax(formula);
     if (isSyntaxValid !== 0) {
         return isSyntaxValid;
     }
 
-    formula = debrace(formula);
-
-    // braces pairing check
     let isBracesPaired = checkPairingBraces(formula);
     if (isBracesPaired !== 0) {
         return isBracesPaired;
-    }
-
-    // parsing exactly
-    let dirtyGroups = formula.split(/\)([&|~]|->)\(/g);
-
-    let groups = [];
-    dirtyGroups.forEach(group => {
-        groups.push(group.replace(/[()]/g, ''));
-    });
-
-    if (groups.indexOf('|') !== -1 || groups.indexOf('->') !== -1 || groups.indexOf('~') !== -1) {
-        return 2;
-    }
-
-    groups = groups.filter(group => group !== '&');
-
-    let isLiteralsUnique = checkLiteralSets(groups);
-    if (isLiteralsUnique !== 0) {
-        return isLiteralsUnique;
     }
 
     return 0;
@@ -176,8 +89,29 @@ function checkFormula(formula) {
 
 function build() {
     let formula = document.getElementById('formulaInput').value;
+
+    let syntaxValidationResult = checkFormula(formula);
+    if (syntaxValidationResult !== 0) {
+        let messageText = document.getElementById('messageText');
+        messageText.innerHTML = checkingMessages[syntaxValidationResult];
+        messageText.style.color = (syntaxValidationResult == 0 ? '#b9fdc5' : '#eebebe');
+
+        return;
+    }
+
+    let resultElement = document.getElementById("result");
+    let truthTableElement = document.getElementById("table");
+
+    if (formula.match(/^[A-Z]$/)) {
+        resultElement.innerHTML = formula;
+    }
+
     let atoms = getUniqueAtoms(formula);
     let valueSets = getValueSets(atoms);
+
+    truthTableElement.innerHTML = atoms.toString().replace(/,/g, ' | ') + ' = f<br>';
+    truthTableElement.innerHTML += '-'.repeat(truthTableElement.innerHTML.length - 4) + '<br>';
+    let pdnf = '';
 
     for (valueSetNumber = 0; valueSetNumber < valueSets.length; valueSetNumber++) {
         let formulaWithValues = formula;
@@ -185,48 +119,38 @@ function build() {
             var rgx = new RegExp(atoms[atomIndex], "g");
             formulaWithValues = formulaWithValues.replace(rgx, valueSets[valueSetNumber][atomIndex]);
         }
-        console.log(formulaWithValues);
-        calculateFunctionResult(formulaWithValues);
-    }
-}
 
-function compareArrays(array1, array2) {
-    var i = array1.length;
+        let functionResult = calculateFunctionResult(formulaWithValues);
+        truthTableElement.innerHTML += valueSets[valueSetNumber].toString().replace(/,/g, ' | ') + ' = ' + functionResult + '<br>';
 
-    while (i--) {
-        if (array1[i] !== array2[i]) {
-            return false;
+        if (functionResult === '1') {
+            pdnf += '(';
+
+            for (atomIndex = 0; atomIndex < atoms.length; atomIndex++) {
+                if (valueSets[valueSetNumber][atomIndex] === '0') {
+                    pdnf += '(!' + atoms[atomIndex] + ')';
+                } else {
+                    pdnf += atoms[atomIndex];
+                }
+
+                if (atomIndex != atoms.length - 1) {
+                    pdnf += '&';
+                }
+            }
+
+            pdnf += ')';
+            if (valueSetNumber != valueSets.length - 1) {
+                pdnf += '|';
+            }
         }
     }
 
-    return true;
+    resultElement.innerHTML = pdnf;
 }
-
-//////////
 
 function getUniqueAtoms(formula) {
     let atoms = [...new Set(formula.split(/[^A-Z]/).filter(value => value !== ''))];
     return atoms;
-}
-
-function and(x, y) {
-    return x && y;
-}
-
-function or(x, y) {
-    return x || y;
-}
-
-function not(x) {
-    return !x;
-}
-
-function implication(x, y) {
-    return !x || y;
-}
-
-function equivalence(x, y) {
-    return x === y;
 }
 
 function getValueSets(atoms) {
@@ -266,7 +190,7 @@ function calculateFunctionResult(formulaWithValues) {
         formulaWithValues = formulaWithValues.replace(/\(([10])~(?!\1)\)/g, '1');
     }
 
-    console.log(formulaWithValues);
+    return formulaWithValues;
 }
 
 class TruthTable {
