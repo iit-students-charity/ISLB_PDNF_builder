@@ -10,12 +10,13 @@ var checkingMessages = [
     "formula must start with '(' and variables for next", // 2
     "formula must end with ')' followed by variables", // 3
     "all groups have to be divided by '&', '|', '~' or '->'", // 4
-    "all symbols must be divided by '&', '|', '~' or '->'", // 5
-    "all negations have to be braced", // 6
-    "all binary operations have to be braced", // 7
-    "one braced symbol", // 8
-    "extra braces", // 9
-    "braces lack", // 10
+    "empty group", // 5
+    "all symbols must be divided by '&', '|', '~' or '->'", // 6
+    "all negations have to be braced", // 7
+    "all binary operations have to be braced", // 8
+    "one braced symbol", // 9
+    "extra braces", // 10
+    "braces lack", // 11
 ];
 
 function checkSyntax(formula) {
@@ -35,20 +36,24 @@ function checkSyntax(formula) {
         return 4;
     }
 
-    if (formula.match(/[A-Z]([^|&~]|(?!->))[A-Z]/)) {
+    if (formula.match(/\(\)/)) {
         return 5;
     }
 
-    if (formula.match(/[^(]![A-B]/) || formula.match(/![A-B][^)]/)) {
+    if (formula.match(/[A-Z]([^|&~]|(?!->))[A-Z]/) || formula.match(/(([|&~]|->)\))|\((([|&~]|->))/)) {
         return 6;
+    }
+
+    if (formula.match(/[^(]![A-B]/) || formula.match(/![A-B][^)]/)) {
+        return 7;
     }
     
     if (formula.match(/([|&~]|->)[A-Z]([|&~]|->)/g) || formula.match(/^[A-Z]([|&~]|->)[A-Z]$/g)) {
-        return 7;
+        return 8;
     }
 
     if (formula.match(/\([A-Z]\)/)) {
-        return 8;
+        return 9;
     }
 
     return 0;
@@ -59,11 +64,11 @@ function checkPairingBraces(formula) {
     let countOfCloseBraces = formula.split(')').length - 1;
     
     if (countOfOpenBraces > countOfCloseBraces) {
-        return 9;
+        return 10;
     }
 
     if (countOfOpenBraces < countOfCloseBraces) {
-        return 10;
+        return 11;
     }
 
     return 0;
@@ -89,12 +94,13 @@ function checkFormula(formula) {
 
 function build() {
     let formula = document.getElementById('formulaInput').value;
+    let messageText = document.getElementById('messageText');
 
     let syntaxValidationResult = checkFormula(formula);
+    messageText.style.color = (syntaxValidationResult == 0 ? '#b9fdc5' : '#eebebe');
+
     if (syntaxValidationResult !== 0) {
-        let messageText = document.getElementById('messageText');
         messageText.innerHTML = checkingMessages[syntaxValidationResult];
-        messageText.style.color = (syntaxValidationResult == 0 ? '#b9fdc5' : '#eebebe');
 
         return;
     }
@@ -112,6 +118,7 @@ function build() {
     truthTableElement.innerHTML = atoms.toString().replace(/,/g, ' | ') + ' = f<br>';
     truthTableElement.innerHTML += '-'.repeat(truthTableElement.innerHTML.length - 4) + '<br>';
     let pdnf = '';
+    let countOfGroups = 0;
 
     for (valueSetNumber = 0; valueSetNumber < valueSets.length; valueSetNumber++) {
         let formulaWithValues = formula;
@@ -124,9 +131,17 @@ function build() {
         truthTableElement.innerHTML += valueSets[valueSetNumber].toString().replace(/,/g, ' | ') + ' = ' + functionResult + '<br>';
 
         if (functionResult === '1') {
-            pdnf += '(';
+            countOfGroups++;
+
+            if (valueSetNumber != valueSets.length - 1) {
+                pdnf += '(';
+            }
 
             for (atomIndex = 0; atomIndex < atoms.length; atomIndex++) {
+                if (atomIndex != atoms.length - 1) {
+                    pdnf += '(';
+                }
+                
                 if (valueSets[valueSetNumber][atomIndex] === '0') {
                     pdnf += '(!' + atoms[atomIndex] + ')';
                 } else {
@@ -138,13 +153,21 @@ function build() {
                 }
             }
 
-            pdnf += ')';
+            for (atomIndex = 0; atomIndex < atoms.length - 1; atomIndex++) {
+                pdnf += ')';
+            }
+
             if (valueSetNumber != valueSets.length - 1) {
                 pdnf += '|';
             }
         }
     }
 
+    for (i = 0; i < countOfGroups - 1; i++) {
+        pdnf += ')';
+    }
+
+    messageText.innerHTML = '♥';
     resultElement.innerHTML = pdnf;
 }
 
@@ -183,11 +206,11 @@ function calculateFunctionResult(formulaWithValues) {
         formulaWithValues = formulaWithValues.replace(/(\([10]\&0\))|(\(0\&[10]\))/g, '0');
         formulaWithValues = formulaWithValues.replace(/(\(1\&1\))/g, '1');
 
-        formulaWithValues = formulaWithValues.replace(/\([10]->1\)/g, '1');
         formulaWithValues = formulaWithValues.replace(/\(1->0\)/g, '0');
+        formulaWithValues = formulaWithValues.replace(/\([10]->[10]\)/g, '1');
         
         formulaWithValues = formulaWithValues.replace(/\(([10])~\1\)/g, '1');
-        formulaWithValues = formulaWithValues.replace(/\(([10])~(?!\1)\)/g, '1');
+        formulaWithValues = formulaWithValues.replace(/\([10]~[10]\)/g, '0');
     }
 
     return formulaWithValues;
