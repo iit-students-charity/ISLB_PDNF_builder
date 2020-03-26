@@ -2,7 +2,7 @@
 // Лабораторная работа 2 по дисциплине ЛОИС
 // Выполнена студенткой группы 721702 БГУИР Стрижич Анжелика Олеговна
 // Файл содержит функции парсинга строки для проверки синтаксиса и подсчета значений подформул
-// 12.03.2020
+// 25.03.2020
 
 var checkingMessages = [
     "", // 0
@@ -98,21 +98,21 @@ function build() {
 
         return;
     }
+    else {
+        messageText.innerHTML = '';
+    }
 
     let resultElement = document.getElementById("result");
     let truthTableElement = document.getElementById("table");
 
-    if (formula.match(/^[A-Z]$/)) {
-        resultElement.innerHTML = formula;
-    }
-
     let atoms = getUniqueAtoms(formula);
     let valueSets = getValueSets(atoms);
 
-    truthTableElement.innerHTML = atoms.toString().replace(/,/g, ' | ') + ' = f<br>';
+    truthTableElement.innerHTML = atoms.toString().replace(/,/g, ' | ') + ' | f<br>';
     truthTableElement.innerHTML += '-'.repeat(truthTableElement.innerHTML.length - 4) + '<br>';
-    let pdnf = '';
 
+    var positiveResultValueSets = [];
+    
     for (valueSetNumber = 0; valueSetNumber < valueSets.length; valueSetNumber++) {
         let formulaWithValues = formula;
         for (atomIndex = 0; atomIndex < atoms.length; atomIndex++) {
@@ -121,31 +121,63 @@ function build() {
         }
 
         let functionResult = calculateFunctionResult(formulaWithValues);
-        truthTableElement.innerHTML += valueSets[valueSetNumber].toString().replace(/,/g, ' | ') + ' = ' + functionResult + '<br>';
+        if (functionResult == 1) {
+            positiveResultValueSets.push(valueSetNumber);
+        }
 
-        if (functionResult === '1') {
+        truthTableElement.innerHTML += valueSets[valueSetNumber].toString().replace(/,/g, ' | ') + ' | ' + functionResult + '<br>';
+    }
+    
+    let pdnf = '';    
+    let countOfGroups = 0;
+
+    for (valueSetNumber = 0; valueSetNumber < positiveResultValueSets.length; valueSetNumber++) {
+        pdnf += (countOfGroups == 1 || valueSetNumber == 0) ? '' : '|';
+
+        if (valueSetNumber < positiveResultValueSets.length - 1) {
             pdnf += '(';
+        }
 
-            for (atomIndex = 0; atomIndex < atoms.length; atomIndex++) {
-                if (valueSets[valueSetNumber][atomIndex] === '0') {
-                    pdnf += '(!' + atoms[atomIndex] + ')';
-                } else {
-                    pdnf += atoms[atomIndex];
-                }
+        pdnf += (atoms.length == 1) ? '' : '(';
 
-                if (atomIndex != atoms.length - 1) {
-                    pdnf += '&';
-                }
+        // fiil group with variables, dividing them with '&('
+        for (atomIndex = 0; atomIndex < atoms.length; atomIndex++) {
+            if (valueSets[positiveResultValueSets[valueSetNumber]][atomIndex] === '0') {
+                pdnf += '(!' + atoms[atomIndex] + ')';
+            } else {
+                pdnf += atoms[atomIndex];
             }
 
+            if (atomIndex != atoms.length - 1) {
+                pdnf += '&';
+            }
+            if (atomIndex < atoms.length - 2) {
+                pdnf += '(';
+            }
+        }
+
+        // adding closing braces
+        for (atomIndex = 0; atomIndex < atoms.length - 1; atomIndex++) {
             pdnf += ')';
-            if (valueSetNumber != valueSets.length - 1) {
-                pdnf += '|';
-            }
         }
     }
 
+    for (valueSetNumber = 0; valueSetNumber < positiveResultValueSets.length - 1; valueSetNumber++) {
+        pdnf += ')';
+    }
+
     resultElement.innerHTML = pdnf;
+}
+
+function containsPositives(valueSets, fromIndex, formulaWithValues) {
+    let positives = 0;
+    for (i = fromIndex; i < valueSets.length; i++) {
+        if (calculateFunctionResult(formulaWithValues) == 1) {
+            positives++;
+        }
+    }
+
+    return positives;
 }
 
 function getUniqueAtoms(formula) {
@@ -173,10 +205,10 @@ function getValueSets(atoms) {
 }
 
 function calculateFunctionResult(formulaWithValues) {
-    formulaWithValues = formulaWithValues.replace(/\(!0\)/g, '1');
-    formulaWithValues = formulaWithValues.replace(/\(!1\)/g, '0');
+    while (formulaWithValues.match(/[!|&~]|->/)) {
+        formulaWithValues = formulaWithValues.replace(/\(?!0\)?/g, '1');
+        formulaWithValues = formulaWithValues.replace(/\(?!1\)?/g, '0');
 
-    while (formulaWithValues.match(/[|&~]|->/)) {
         formulaWithValues = formulaWithValues.replace(/(\([10]\|1\))|(\(1\|[10]\))/g, '1');
         formulaWithValues = formulaWithValues.replace(/(\(0\|0\))/g, '0');
         
@@ -191,12 +223,4 @@ function calculateFunctionResult(formulaWithValues) {
     }
 
     return formulaWithValues;
-}
-
-class TruthTable {
-    constructor(atoms, values, functionResults) {
-        this.atoms = atoms;
-        this.values = values;
-        this.functionResults = functionResults;
-    }
 }
