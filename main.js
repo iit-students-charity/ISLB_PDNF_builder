@@ -43,7 +43,7 @@ function checkSyntax(formula) {
         return 6;
     }
     
-    if (formula.match(/([|&~]|->)[A-Z]([|&~]|->)/g) || formula.match(/^[A-Z]([|&~]|->)[A-Z]$/g)) {
+    if (!checkAllBinaryOperationsBracing(formula)) {
         return 7;
     }
 
@@ -52,6 +52,23 @@ function checkSyntax(formula) {
     }
 
     return 0;
+}
+
+function checkAllBinaryOperationsBracing(formula) {
+    let formulaCopy = formula;
+
+    while (formulaCopy.match(/([|&~]|->)/g) || !formulaCopy.match(/^[S()]+$/g)) {
+        let prevCopy = formulaCopy;
+
+        formulaCopy = formulaCopy.replace(/\(![A-Z]\)/g, 'S');
+        formulaCopy = formulaCopy.replace(/\([A-Z]([|&~]|->)[A-Z]\)/g, 'S');
+
+        if (formulaCopy === prevCopy) {
+            return false;
+        }
+    }
+
+    return formulaCopy === 'S';
 }
 
 function checkPairingBraces(formula) {
@@ -167,17 +184,6 @@ function build() {
     }
 
     resultElement.innerHTML = pdnf;
-}
-
-function containsPositives(valueSets, fromIndex, formulaWithValues) {
-    let positives = 0;
-    for (i = fromIndex; i < valueSets.length; i++) {
-        if (calculateFunctionResult(formulaWithValues) == 1) {
-            positives++;
-        }
-    }
-
-    return positives;
 }
 
 function getUniqueAtoms(formula) {
