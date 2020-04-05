@@ -48,6 +48,8 @@ function checkFormula(formula) {
 
 function build() {
     let formula = document.getElementById('formulaInput').value;
+    let truthTableElement = document.getElementById("table");
+    let resultElement = document.getElementById("result");
 
     let syntaxValidationResult = checkFormula(formula);
     if (!syntaxValidationResult) {
@@ -55,14 +57,15 @@ function build() {
         messageText.innerHTML = "it isn't a formula";
         messageText.style.color = '#eebebe';
 
+        truthTableElement.innerHTML = '';
+        resultElement.innerHTML = '';
+
         return;
     }
     else {
         messageText.innerHTML = '';
     }
 
-    let resultElement = document.getElementById("result");
-    let truthTableElement = document.getElementById("table");
 
     let atoms = getUniqueAtoms(formula);
     let valueSets = getValueSets(atoms);
@@ -70,22 +73,7 @@ function build() {
     truthTableElement.innerHTML = atoms.toString().replace(/,/g, ' | ') + ' | f<br>';
     truthTableElement.innerHTML += '-'.repeat(truthTableElement.innerHTML.length - 4) + '<br>';
 
-    var positiveResultValueSets = [];
-    
-    for (valueSetNumber = 0; valueSetNumber < valueSets.length; valueSetNumber++) {
-        let formulaWithValues = formula;
-        for (atomIndex = 0; atomIndex < atoms.length; atomIndex++) {
-            var rgx = new RegExp(atoms[atomIndex], "g");
-            formulaWithValues = formulaWithValues.replace(rgx, valueSets[valueSetNumber][atomIndex]);
-        }
-
-        let functionResult = calculateFunctionResult(formulaWithValues);
-        if (functionResult == 1) {
-            positiveResultValueSets.push(valueSetNumber);
-        }
-
-        truthTableElement.innerHTML += valueSets[valueSetNumber].toString().replace(/,/g, ' | ') + ' | ' + functionResult + '<br>';
-    }
+    var positiveResultValueSets = getPositiveResultValueSets(valueSets, formula, atoms, truthTableElement);
     
     let pdnf = '';    
     let countOfGroups = 0;
@@ -98,14 +86,9 @@ function build() {
         }
 
         pdnf += (atoms.length == 1) ? '' : '(';
-        
+
         // fiil group with variables, dividing them with '&('
         pdnf += createGroup(atoms, valueSets, positiveResultValueSets, valueSetNumber);
-
-        // adding closing braces
-        for (atomIndex = 0; atomIndex < atoms.length - 1; atomIndex++) {
-            pdnf += ')';
-        }
     }
 
     for (valueSetNumber = 0; valueSetNumber < positiveResultValueSets.length - 1; valueSetNumber++) {
@@ -133,7 +116,33 @@ function createGroup(atoms, valueSets, positiveResultValueSets, valueSetNumber) 
         }
     }
 
+    // adding closing braces
+    for (atomIndex = 0; atomIndex < atoms.length - 1; atomIndex++) {
+        group += ')';
+    }
+
     return group;
+}
+
+function getPositiveResultValueSets(valueSets, formula, atoms, truthTableElement) {
+    let positiveResultValueSets = [];
+
+    for (valueSetNumber = 0; valueSetNumber < valueSets.length; valueSetNumber++) {
+        let formulaWithValues = formula;
+        for (atomIndex = 0; atomIndex < atoms.length; atomIndex++) {
+            var rgx = new RegExp(atoms[atomIndex], "g");
+            formulaWithValues = formulaWithValues.replace(rgx, valueSets[valueSetNumber][atomIndex]);
+        }
+
+        let functionResult = calculateFunctionResult(formulaWithValues);
+        if (functionResult == 1) {
+            positiveResultValueSets.push(valueSetNumber);
+        }
+
+        truthTableElement.innerHTML += valueSets[valueSetNumber].toString().replace(/,/g, ' | ') + ' | ' + functionResult + '<br>';
+    }
+
+    return positiveResultValueSets;
 }
 
 function getUniqueAtoms(formula) {
@@ -174,8 +183,8 @@ function calculateFunctionResult(formulaWithValues) {
         formulaWithValues = formulaWithValues.replace(/\(1->0\)/g, '0');
         formulaWithValues = formulaWithValues.replace(/\([10]->[10]\)/g, '1');
         
-        formulaWithValues = formulaWithValues.replace(/\(([10])~\1\)/g, '1');
-        formulaWithValues = formulaWithValues.replace(/\(([10])~(?!\1)\)/g, '1');
+        formulaWithValues = formulaWithValues.replace(/\(0~0\)|\(1~1\)/g, '1');
+        formulaWithValues = formulaWithValues.replace(/\(([10])~[10]\)/g, '0');
     }
 
     return formulaWithValues;
