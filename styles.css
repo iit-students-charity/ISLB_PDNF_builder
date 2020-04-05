@@ -123,6 +123,13 @@ body {
     font-size: 24px;
 }
 
+#questSection {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
 .radio {
 	width: 24px;
     height: 24px;
@@ -134,7 +141,7 @@ body {
 }
 
 #resultSection {
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
     flex-direction: column;

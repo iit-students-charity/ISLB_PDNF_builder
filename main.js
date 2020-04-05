@@ -189,3 +189,112 @@ function calculateFunctionResult(formulaWithValues) {
 
     return formulaWithValues;
 }
+
+///////////// quest.js
+
+class Question {
+    constructor(formula, answer) {
+        this.formula = formula;
+        this.answer = answer;
+    }
+}
+
+var variablesCodes = [ 'I', 'J', 'K' ];
+
+var currentQuestion = generateQuestion();
+var countOfQuestions = 10;
+var currentQuestionIndex = 1;
+var correctAnswers = 0;
+
+renderQuestion();
+
+var nextButton = document.getElementById('nextButton');
+var questSection = document.getElementById('questSection');
+var resultSection = document.getElementById('resultSection');
+
+function next() {
+    let currentAnswerElement = document.getElementById(currentQuestion.answer.toString());
+
+    if (currentAnswerElement.checked) {
+        correctAnswers++;
+    }
+
+    ++currentQuestionIndex;
+    if (currentQuestionIndex === countOfQuestions) {
+        document.getElementById('score').innerHTML = 10 * correctAnswers / countOfQuestions;
+
+        questSection.style.display = 'none';
+        resultSection.style.display = 'flex';
+        document.
+        return;
+    }
+
+    currentQuestion = generateQuestion();
+
+    renderQuestion();
+}
+
+function generateQuestion() {
+    let countOfArgs = getRandomInt(2);
+    let countOfGroups = getRandomInt(Math.pow(2, countOfArgs));
+
+    let formula = generateFormula(countOfGroups, countOfArgs);
+    let answer = checkFormula(formula) === 0 ? true : false;
+
+    return new Question(formula, answer);
+}
+
+function getRandomInt(max) {
+    return Math.floor(Math.random() * Math.floor(max)) + 1;
+}
+
+function generateFormula(countOfGroups, countOfArgs) {
+    let formula = '';
+
+    for (i = 0; i < countOfGroups; i++) {
+        let countOfArgsInParticualarGroup = countOfArgs - getRandomInt(countOfArgs) + 2;
+        let group = '';
+
+        if (countOfGroups !== 1 && i < countOfGroups - 1) {
+            formula += '(';
+        }
+
+        for (j = 0; j < countOfArgsInParticualarGroup; j++) {
+            if (countOfArgsInParticualarGroup !== 1 && j < countOfArgsInParticualarGroup - 1) {
+                group += '(';
+            }
+
+            let isNegative = (Math.random() >= 0.5);
+            group += (isNegative ? '(!' : '') + variablesCodes[j] + (isNegative ? ')' : '');
+            if (j < countOfArgsInParticualarGroup - 1) {
+                let random  = Math.random();
+                group += ((random >= 0.2) ? '|' : (random >= 0.1 ? '&' : (random >= 0.05 ? '~' : '->')));
+            }
+        }
+
+        for (j = 0; j < countOfArgsInParticualarGroup - 1; j++) {
+            if (countOfArgsInParticualarGroup !== 1) {
+                group += ')';
+            }
+        }
+
+        formula += group;
+
+        if (i < countOfGroups - 1) {
+            let random  = Math.random();
+            formula += ((random >= 0.3) ? '|' : (random >= 0.2 ? '&' : (random >= 0.1 ? '~' : '->')));
+        }
+    }
+
+    for (j = 0; j < countOfGroups - 1; j++) {
+        if (countOfGroups !== 1) {
+            formula += ')';
+        }
+    }
+
+    return formula;
+}
+
+function renderQuestion() {
+    document.getElementById('formula').innerHTML = currentQuestion.formula;
+}
