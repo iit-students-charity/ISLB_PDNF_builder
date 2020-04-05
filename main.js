@@ -48,6 +48,7 @@ function checkFormula(formula) {
 
 function build() {
     let formula = document.getElementById('formulaInput').value;
+    let messageText = document.getElementById('messageText');
 
     let syntaxValidationResult = checkFormula(formula);
     if (!syntaxValidationResult) {
@@ -83,7 +84,6 @@ function build() {
         if (functionResult == 1) {
             positiveResultValueSets.push(valueSetNumber);
         }
-
         truthTableElement.innerHTML += valueSets[valueSetNumber].toString().replace(/,/g, ' | ') + ' | ' + functionResult + '<br>';
     }
     
@@ -113,6 +113,10 @@ function build() {
             if (atomIndex < atoms.length - 2) {
                 pdnf += '(';
             }
+
+            for (atomIndex = 0; atomIndex < atoms.length - 1; atomIndex++) pdnf += ')';
+
+            if (valueSetNumber != valueSets.length - 1) pdnf += '|';
         }
 
         // adding closing braces
@@ -125,6 +129,9 @@ function build() {
         pdnf += ')';
     }
 
+    for (i = 0; i < countOfGroups - 1; i++) pdnf += ')';
+
+    messageText.innerHTML = '♥';
     resultElement.innerHTML = pdnf;
 }
 
@@ -135,6 +142,7 @@ function getUniqueAtoms(formula) {
 
 function getValueSets(atoms) {
     let sets = [];
+
     for (let row = 0; row < Math.pow(2, atoms.length); row++) {
         sets.push([]);
         let binaryNumber = Array.from(row.toString(2));
@@ -144,9 +152,7 @@ function getValueSets(atoms) {
             binaryNumber.forEach(digit => {
                 sets[row].push(digit);                
             });
-        } else {
-            sets[row] = binaryNumber;
-        }
+        } else sets[row] = binaryNumber;
     }
     
     return sets;
@@ -167,7 +173,7 @@ function calculateFunctionResult(formulaWithValues) {
         formulaWithValues = formulaWithValues.replace(/\([10]->[10]\)/g, '1');
         
         formulaWithValues = formulaWithValues.replace(/\(([10])~\1\)/g, '1');
-        formulaWithValues = formulaWithValues.replace(/\(([10])~(?!\1)\)/g, '1');
+        formulaWithValues = formulaWithValues.replace(/\([10]~[10]\)/g, '0');
     }
 
     return formulaWithValues;
