@@ -98,22 +98,9 @@ function build() {
         }
 
         pdnf += (atoms.length == 1) ? '' : '(';
-
+        
         // fiil group with variables, dividing them with '&('
-        for (atomIndex = 0; atomIndex < atoms.length; atomIndex++) {
-            if (valueSets[positiveResultValueSets[valueSetNumber]][atomIndex] === '0') {
-                pdnf += '(!' + atoms[atomIndex] + ')';
-            } else {
-                pdnf += atoms[atomIndex];
-            }
-
-            if (atomIndex != atoms.length - 1) {
-                pdnf += '&';
-            }
-            if (atomIndex < atoms.length - 2) {
-                pdnf += '(';
-            }
-        }
+        pdnf += createGroup(atoms, valueSets, positiveResultValueSets, valueSetNumber);
 
         // adding closing braces
         for (atomIndex = 0; atomIndex < atoms.length - 1; atomIndex++) {
@@ -126,6 +113,27 @@ function build() {
     }
 
     resultElement.innerHTML = pdnf;
+}
+
+function createGroup(atoms, valueSets, positiveResultValueSets, valueSetNumber) {
+    let group = '';
+
+    for (atomIndex = 0; atomIndex < atoms.length; atomIndex++) {
+        if (valueSets[positiveResultValueSets[valueSetNumber]][atomIndex] === '0') {
+            group += '(!' + atoms[atomIndex] + ')';
+        } else {
+            group += atoms[atomIndex];
+        }
+
+        if (atomIndex != atoms.length - 1) {
+            group += '&';
+        }
+        if (atomIndex < atoms.length - 2) {
+            group += '(';
+        }
+    }
+
+    return group;
 }
 
 function getUniqueAtoms(formula) {
