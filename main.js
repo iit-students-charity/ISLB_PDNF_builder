@@ -2,116 +2,58 @@
 // Лабораторная работа 2 по дисциплине ЛОИС
 // Выполнена студенткой группы 721702 БГУИР Стрижич Анжелика Олеговна
 // Файл содержит функции парсинга строки для проверки синтаксиса и подсчета значений подформул
-// 25.03.2020
+// 5.04.2020
 
-var checkingMessages = [
-    "", // 0
-    "invalid symbols", // 1
-    "formula must start with '(' and variables for next", // 2
-    "formula must end with ')' followed by variables", // 3
-    "all groups have to be divided by '&', '|', '~' or '->'", // 4
-    "all symbols must be divided by '&', '|', '~' or '->'", // 5
-    "all negations have to be braced", // 6
-    "all binary operations have to be braced", // 7
-    "one braced symbol", // 8
-    "extra braces", // 9
-    "braces lack", // 10
-];
-
-function checkSyntax(formula) {
-    if (!formula.match(/^([A-Z()|&!~10]|->)*$/g)) {
-        return 1;
-    }
-
-    if (!formula.match(/^\((\(*|[01A-Z]|\(!?[01A-Z]\))/) && !formula.match(/[A-Z01]/g)) {
-        return 2;
-    }
-
-    if (!formula.match(/[A-Z)01]\)$/) && !formula.match(/[A-Z01]/g)) {
-        return 3;
-    }
-
-    if (formula.match(/\)\(/)) {
-        return 4;
-    }
-
-    if (formula.match(/[A-Z]([^|&~]|(?!->))[A-Z]/)) {
-        return 5;
-    }
-
-    if (formula.match(/[^(]![A-B]/) || formula.match(/![A-B][^)]/)) {
-        return 6;
-    }
-    
-    if (!checkAllBinaryOperationsBracing(formula)) {
-        return 7;
-    }
-
-    if (formula.match(/\([A-Z]\)/)) {
-        return 8;
-    }
-
-    return 0;
+function checkSymbols(formula) {
+    return formula.match(/^([A-Z()|&!~10]|->)*$/g);
 }
 
-function checkAllBinaryOperationsBracing(formula) {
+function checkSyntax(formula) {
+    return formula.match(/^[A-Z01]$/) ||
+        (!formula.match(/\)\(/) &&
+        !formula.match(/[A-Z01]([^|&~]|(?!->))[A-Z01]/) &&
+        !formula.match(/[^(]![A-Z01]/) && !formula.match(/![A-Z01][^)]/) &&
+        !formula.match(/\([A-Z01]\)/) &&
+        checkPairingBraces(formula) &&
+        checkBinaryOperationsBracing(formula));
+}
+
+function checkBinaryOperationsBracing(formula) {
     let formulaCopy = formula;
 
-    while (formulaCopy.match(/([|&~]|->)/g) || !formulaCopy.match(/^[S()]+$/g)) {
+    while (formulaCopy.match(/([|&~]|->)/g) || !formulaCopy.match(/^[A()]+$/g)) {
         let prevCopy = formulaCopy;
 
-        formulaCopy = formulaCopy.replace(/\(![A-Z]\)/g, 'S');
-        formulaCopy = formulaCopy.replace(/\([A-Z]([|&~]|->)[A-Z]\)/g, 'S');
+        formulaCopy = formulaCopy.replace(/\(![A-Z01]\)/g, 'A');
+        formulaCopy = formulaCopy.replace(/\([A-Z01]([|&~]|->)[A-Z01]\)/g, 'A');
 
         if (formulaCopy === prevCopy) {
             return false;
         }
     }
 
-    return formulaCopy === 'S';
+    return formulaCopy === 'A';
 }
 
 function checkPairingBraces(formula) {
-    let countOfOpenBraces = formula.split('(').length - 1;
-    let countOfCloseBraces = formula.split(')').length - 1;
+    let open = formula.split('(').length - 1;
+    let closed = formula.split(')').length - 1;
     
-    if (countOfOpenBraces > countOfCloseBraces) {
-        return 9;
-    }
-
-    if (countOfOpenBraces < countOfCloseBraces) {
-        return 10;
-    }
-
-    return 0;
+    return open == closed;
 }
 
 function checkFormula(formula) {
-    if (!formula) {
-        return 1;
-    }
-
-    let isSyntaxValid = checkSyntax(formula);
-    if (isSyntaxValid !== 0) {
-        return isSyntaxValid;
-    }
-
-    let isBracesPaired = checkPairingBraces(formula);
-    if (isBracesPaired !== 0) {
-        return isBracesPaired;
-    }
-
-    return 0;
+    return checkSymbols(formula) && checkSyntax(formula);
 }
 
 function build() {
     let formula = document.getElementById('formulaInput').value;
 
     let syntaxValidationResult = checkFormula(formula);
-    if (syntaxValidationResult !== 0) {
+    if (!syntaxValidationResult) {
         let messageText = document.getElementById('messageText');
-        messageText.innerHTML = checkingMessages[syntaxValidationResult];
-        messageText.style.color = (syntaxValidationResult == 0 ? '#b9fdc5' : '#eebebe');
+        messageText.innerHTML = "it isn't a formula";
+        messageText.style.color = '#eebebe';
 
         return;
     }
@@ -221,8 +163,8 @@ function calculateFunctionResult(formulaWithValues) {
         formulaWithValues = formulaWithValues.replace(/(\([10]\&0\))|(\(0\&[10]\))/g, '0');
         formulaWithValues = formulaWithValues.replace(/(\(1\&1\))/g, '1');
 
-        formulaWithValues = formulaWithValues.replace(/\([10]->1\)/g, '1');
         formulaWithValues = formulaWithValues.replace(/\(1->0\)/g, '0');
+        formulaWithValues = formulaWithValues.replace(/\([10]->[10]\)/g, '1');
         
         formulaWithValues = formulaWithValues.replace(/\(([10])~\1\)/g, '1');
         formulaWithValues = formulaWithValues.replace(/\(([10])~(?!\1)\)/g, '1');
