@@ -96,6 +96,8 @@ function build() {
     }
 
     resultElement.innerHTML = pdnf;
+
+    return pdnf;
 }
 
 function createGroup(atoms, valueSets, positiveResultValueSets, valueSetNumber) {
@@ -239,7 +241,7 @@ function generateQuestion() {
     let countOfGroups = getRandomInt(Math.pow(2, countOfArgs));
 
     let formula = generateFormula(countOfGroups, countOfArgs);
-    let answer = checkFormula(formula) === 0 ? true : false;
+    let answer = (buildTest(formula) === formula) ? true : false;
 
     return new Question(formula, answer);
 }
@@ -268,7 +270,7 @@ function generateFormula(countOfGroups, countOfArgs) {
             group += (isNegative ? '(!' : '') + variablesCodes[j] + (isNegative ? ')' : '');
             if (j < countOfArgsInParticualarGroup - 1) {
                 let random  = Math.random();
-                group += ((random >= 0.2) ? '|' : (random >= 0.1 ? '&' : (random >= 0.05 ? '~' : '->')));
+                group += ((random >= 0.2) ? '&' : (random >= 0.15 ? '|' : (random >= 0.02 ? '~' : '->')));
             }
         }
 
@@ -297,4 +299,38 @@ function generateFormula(countOfGroups, countOfArgs) {
 
 function renderQuestion() {
     document.getElementById('formula').innerHTML = currentQuestion.formula;
+}
+
+function buildTest(formula) {
+    let syntaxValidationResult = checkFormula(formula);
+    if (!syntaxValidationResult) {
+        return;
+    }
+
+    let atoms = getUniqueAtoms(formula);
+    let valueSets = getValueSets(atoms);
+
+    var positiveResultValueSets = getPositiveResultValueSets(valueSets, formula, atoms, []);
+    
+    let pdnf = '';    
+    let countOfGroups = 0;
+
+    for (valueSetNumber = 0; valueSetNumber < positiveResultValueSets.length; valueSetNumber++) {
+        pdnf += (countOfGroups == 1 || valueSetNumber == 0) ? '' : '|';
+
+        if (valueSetNumber < positiveResultValueSets.length - 1) {
+            pdnf += '(';
+        }
+
+        pdnf += (atoms.length == 1) ? '' : '(';
+
+        // fiil group with variables, dividing them with '&('
+        pdnf += createGroup(atoms, valueSets, positiveResultValueSets, valueSetNumber);
+    }
+
+    for (valueSetNumber = 0; valueSetNumber < positiveResultValueSets.length - 1; valueSetNumber++) {
+        pdnf += ')';
+    }
+
+    return pdnf;
 }
